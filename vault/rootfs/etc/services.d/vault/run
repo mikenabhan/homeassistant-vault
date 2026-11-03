@@ -1,0 +1,47 @@
+#!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
+set -e
+
+DATA_DIR=/data/vault
+CONFIG=/tmp/vault.hcl
+
+mkdir -p "${DATA_DIR}"
+
+LISTENER_TLS='tls_disable = true'
+SCHEME=http
+if bashio::config.true 'tls_enabled'; then
+    CERT_FILE="/ssl/$(bashio::config 'certfile')"
+    KEY_FILE="/ssl/$(bashio::config 'keyfile')"
+    if ! bashio::fs.file_exists "${CERT_FILE}" || ! bashio::fs.file_exists "${KEY_FILE}"; then
+        bashio::exit.nok "tls_enabled but ${CERT_FILE} and/or ${KEY_FILE} not found in Home Assistant's /ssl folder"
+    fi
+    LISTENER_TLS="tls_cert_file = \"${CERT_FILE}\"
+  tls_key_file  = \"${KEY_FILE}\""
+    SCHEME=https
+fi
+
+API_ADDR=$(bashio::config 'api_addr')
+if bashio::var.is_empty "${API_ADDR}"; then
+    API_ADDR="${SCHEME}://$(bashio::addon.hostname):8200"
+fi
+
+cat > "${CONFIG}" <<HCL
+ui            = $(bashio::config.true 'ui' && echo true || echo false)
+disable_mlock = true
+api_addr      = "${API_ADDR}"
+cluster_addr  = "${SCHEME}://127.0.0.1:8201"
+
+storage "raft" {
+  path    = "${DATA_DIR}"
+  node_id = "ha-vault"
+}
+
+listener "tcp" {
+  address         = "0.0.0.0:8200"
+  cluster_address = "127.0.0.1:8201"
+  ${LISTENER_TLS}
+}
+HCL
+
+bashio::log.info "Starting Vault (api_addr=${API_ADDR})"
+exec vault server -config="${CONFIG}" -log-level="$(bashio::config 'log_level')"

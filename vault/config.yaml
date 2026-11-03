@@ -1,0 +1,31 @@
+name: HashiCorp Vault
+version: "1.0.0"
+slug: vault
+description: Secrets management with HashiCorp Vault (integrated Raft storage)
+url: https://github.com/mikenabhan/homeassistant-vault
+arch:
+  - amd64
+  - aarch64
+init: false
+startup: services
+boot: auto
+ports:
+  8200/tcp: 8200
+ports_description:
+  8200/tcp: Vault API and web UI
+map:
+  - ssl:ro
+options:
+  log_level: info
+  ui: true
+  tls_enabled: false
+  certfile: fullchain.pem
+  keyfile: privkey.pem
+  api_addr: ""
+schema:
+  log_level: list(trace|debug|info|warn|error)
+  ui: bool
+  tls_enabled: bool
+  certfile: str
+  keyfile: str
+  api_addr: str?

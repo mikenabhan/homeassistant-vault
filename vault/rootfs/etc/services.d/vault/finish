@@ -1,0 +1,4 @@
+#!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
+bashio::log.info "Vault exited with code ${1}"
+[[ "${1}" -ne 0 && "${1}" -ne 256 ]] && exec /run/s6/basedir/bin/halt
