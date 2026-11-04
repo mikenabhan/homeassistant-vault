@@ -1,5 +1,5 @@
 name: HashiCorp Vault
-version: "1.0.0"
+version: "2.2.1"
 slug: vault
 description: Secrets management with HashiCorp Vault (integrated Raft storage)
 url: https://github.com/mikenabhan/homeassistant-vault
