@@ -1,0 +1,37 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "customManagers": [
+    {
+      "description": "Base images listed in the add-on's build.yaml",
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)build\\.yaml$/"],
+      "matchStrings": [
+        "(?<depName>ghcr\\.io/home-assistant/[a-z0-9]+-base):(?<currentValue>[\\w.-]+)"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Keep the add-on version in config.yaml at the bundled Vault version; an optional -N suffix is an add-on-only revision and resets on a Vault bump",
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)config\\.yaml$/"],
+      "matchStrings": ["(?m)^version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)(?:-\\d+)?\"?\\s*$"],
+      "autoReplaceStringTemplate": "version: \"{{{newValue}}}\"",
+      "depNameTemplate": "hashicorp/vault",
+      "datasourceTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "One PR for Vault: Dockerfile FROM and add-on version move together",
+      "matchPackageNames": ["hashicorp/vault"],
+      "groupName": "hashicorp vault",
+      "commitMessageTopic": "Vault"
+    },
+    {
+      "description": "One PR for all Home Assistant base image architectures",
+      "matchPackageNames": ["ghcr.io/home-assistant/*-base"],
+      "groupName": "home assistant base image"
+    }
+  ]
+}
